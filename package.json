@@ -1,0 +1,23 @@
+{
+  "name": "meme-terraria-motd-bot",
+  "version": "1.0.0",
+  "description": "A banger of a meme to post daily yuri to the terraria channel and take it over.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MyLoginHathBeenTaken/meme-terraria-motd-bot.git"
+  },
+  "author": "MyLogin",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/MyLoginHathBeenTaken/meme-terraria-motd-bot/issues"
+  },
+  "homepage": "https://github.com/MyLoginHathBeenTaken/meme-terraria-motd-bot#readme",
+  "dependencies": {
+    "discord.js": "^14.15.2",
+    "node-schedule": "^2.1.1"
+  }
+}
