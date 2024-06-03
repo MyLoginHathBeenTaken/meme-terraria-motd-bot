@@ -1,4 +1,4 @@
-const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=2';
+const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=2&is_flagged=false';
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
@@ -45,7 +45,7 @@ function pushPull() {
         dataObj = jsonRead(saveData);
     } else if (!(Object.keys(readObj).length === 0) && (readObj.constructor === Object)) {
         //obj empty, file not empty
-        dataObj =  readObj
+        dataObj = readObj
     } else {
         console.error(`No data or read error at: ${saveData}`)
         return {}
@@ -94,7 +94,7 @@ async function testImage(cId) {
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
                         .setImage(`${data.items[0].image_url}`)
-                        .setFooter({ text: `${data.items[0].id}`});
+                        .setFooter({ text: `${data.items[0].id}` });
 
 
                     try {
@@ -138,7 +138,7 @@ async function sendDailyImage() {
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
                         .setImage(`${data.items[0].image_url}`)
-                        .setFooter({ text: `${data.items[0].id}`});
+                        .setFooter({ text: `${data.items[0].id}` });
 
                     for (const channel of channels.values()) {
                         try {
@@ -194,8 +194,10 @@ async function handleCommandInteraction(interaction) {
                 break;
             case 'test':
                 console.log(interaction.channelId);
-                await testImage(interaction.channelId);
                 await interaction.reply('Testing...');
+                for (var i = 0; i < 100; 1++) {
+                    await testImage(interaction.channelId);
+                }
                 break;
             default:
                 await interaction.reply('This command does not exist.');
