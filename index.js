@@ -1,27 +1,62 @@
-const url = "https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=2";
-
+const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=2';
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
-const { token, appID, guildID, motdArray } = require('./config.json');
-
+const { token, appID, motdArray } = require('./config.json');
 const { SlashCommandBuilder, Client, InteractionType, REST, Routes, Events, PermissionFlagsBits, EmbedBuilder, GatewayIntentBits } = require('discord.js');
 const schedule = require('node-schedule');
 const { error } = require('console');
-
 const client = new Client({ intents: GatewayIntentBits.Guilds });
+const saveData = './yuri.json';
+var dataObj = {};
 
-// Array to store subscribed channels
-let subscribedChannels = [];
+// Function to read JSON data from a file
+function jsonRead(file) {
+    try {
+        // Read file content synchronously (consider asynchronous approach for large files)
+        const data = fs.readFileSync(file, "utf8");
+        // Parse JSON data
+        return JSON.parse(data);
+    } catch (error) {
+        console.error("Error reading file:", error);
+        // Handle error appropriately, like returning an empty object or throwing a custom error
+        return {};
+    }
+}
 
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-});
+// Function to write JSON data to a file
+function jsonWrite(file, obj) {
+    try {
+        // Stringify the object
+        const data = JSON.stringify(obj, null, 4); // Add indentation for readability (optional)
+        // Write data to the file synchronously (consider asynchronous approach for large files)
+        fs.writeFileSync(file, data);
+    } catch (error) {
+        console.error("Error writing file:", error);
+        // Handle error appropriately, like throwing a custom error
+    }
+}
+
+function pushPull() {
+    let readObj = jsonRead(saveData);
+    if (!(Object.keys(dataObj).length === 0) && (dataObj.constructor === Object)) {
+        // obj not empty
+        jsonWrite(saveData, dataObj);
+        dataObj = jsonRead(saveData);
+    } else if (!(Object.keys(readObj).length === 0) && (readObj.constructor === Object)) {
+        //obj empty, file not empty
+        dataObj =  readObj
+    } else {
+        console.error(`No data or read error at: ${saveData}`)
+        return {}
+    }
+}
 
 // Function to subscribe a channel
 function subscribeChannel(channel) {
-    if (!subscribedChannels.includes(channel)) {
-        subscribedChannels.push(channel);
+    if (!dataObj.subs.includes(channel)) {
+        dataObj.subs.push(channel);
+        pushPull()
         console.log(`Channel ${channel} subscribed to daily image posts.`);
     } else {
         console.log(`Channel ${channel} already subscribed.`);
@@ -30,9 +65,10 @@ function subscribeChannel(channel) {
 
 // Function to unsubscribe a channel
 function unsubscribeChannel(channel) {
-    const index = subscribedChannels.indexOf(channel);
+    const index = dataObj.subs.indexOf(channel);
     if (index > -1) {
-        subscribedChannels.splice(index, 1);
+        dataObj.subs.splice(index, 1);
+        pushPull()
         console.log(`Channel ${channel} unsubscribed from daily image posts.`);
     } else {
         console.log(`Channel ${channel} not subscribed.`);
@@ -81,7 +117,8 @@ async function testImage(cId) {
 
 // Function to send the daily image
 async function sendDailyImage() {
-    const channels = client.channels.cache.filter(channel => subscribedChannels.includes(channel.id));
+    pushPull()
+    const channels = client.channels.cache.filter(channel => dataObj.subs.includes(channel.id));
     https.get(url, (res) => {
 
         let rawData = '';
@@ -164,23 +201,39 @@ async function handleCommandInteraction(interaction) {
     }
 }
 
+function reRegister() {
+    let unReg = client.guilds.cache.filter((guilds) => !dataObj.registered.includes(guilds.id));
+    for (const guild of unReg.values()) {
+        try {
+            rest.put(Routes.applicationGuildCommands(appID, guild.id), { body: commands });
+            console.log(`Registering application commands on server: ${guild.id}.`)
+            dataObj.registered.push(guild.id)
+            pushPull()
+        } catch (error) {
+            console.error(`Error registering application commands:`, error);
+        }
+    }
+}
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    reRegister()
+});
+
 client.on(Events.InteractionCreate, async interaction => {
     handleCommandInteraction(interaction)
 })
 
 client.on("guildJoin", async (guild) => {
-    try {
-        rest.put(Routes.applicationGuildCommands(appID, guild.id), { body: commands });
-        console.log('Registering application commands.')
-    } catch (error) {
-        console.error(`Error registering application commands:`, error);
-    }
+    //check if registered
+    reRegister()
 });
 
+pushPull()
 client.login(token);
 
 // Daily execution using Node.js scheduling
 const job = schedule.scheduleJob('* * * * *', function () {
     sendDailyImage();
-    console.log('x')
+    reRegister();
+    console.log('-----')
 });
