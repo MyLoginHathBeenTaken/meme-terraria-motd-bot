@@ -96,8 +96,8 @@ async function testImage(cId) {
                         .setImage(`${data.items[0].image_url || data.items[1].image_url}`);
 
                     try {
-                        channel.send({ embeds: [dailyEmbed], content: 'test' });
-                        console.log(`Daily image sent to channel ${cId}`);
+                        channel.send({ embeds: [dailyEmbed] });
+                        console.log(`Test image sent to channel ${cId}`);
                     } catch (error) {
                         console.error(`Error sending image to channel ${cId}:`, error);
                     }
@@ -140,7 +140,7 @@ async function sendDailyImage() {
                     for (const channel of channels.values()) {
                         try {
                             channel.send({ embeds: [dailyEmbed] });
-                            console.log(`Test image sent to channel ${channel.name}`);
+                            console.log(`Daily image sent to channel ${channel.name}`);
                         } catch (error) {
                             console.error(`Error sending image to channel ${channel.name}:`, error);
                         }
@@ -232,7 +232,7 @@ pushPull()
 client.login(token);
 
 // Daily execution using Node.js scheduling
-const job = schedule.scheduleJob('* * * * *', function () {
+const job = schedule.scheduleJob('0 12 * * *', function () {
     sendDailyImage();
     reRegister();
     console.log('-----')
