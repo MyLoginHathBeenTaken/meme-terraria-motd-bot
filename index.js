@@ -93,11 +93,13 @@ async function testImage(cId) {
                     const dailyEmbed = new EmbedBuilder()
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
-                        .setImage(`${data.items[0].image_url || data.items[1].image_url}`);
+                        .setImage(`${data.items[0].image_url}`)
+                        .setFooter({ text: `${data.items[0].id}`});
+
 
                     try {
                         channel.send({ embeds: [dailyEmbed] });
-                        console.log(`Test image sent to channel ${cId}`);
+                        console.log(`Test image ${data.items[0].id} sent to channel ${cId}`);
                     } catch (error) {
                         console.error(`Error sending image to channel ${cId}:`, error);
                     }
@@ -135,7 +137,8 @@ async function sendDailyImage() {
                     const dailyEmbed = new EmbedBuilder()
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
-                        .setImage(`${data.items[0].image_url || data.items[1].image_url}`);
+                        .setImage(`${data.items[0].image_url}`)
+                        .setFooter({ text: `${data.items[0].id}`});
 
                     for (const channel of channels.values()) {
                         try {
