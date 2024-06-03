@@ -10,9 +10,14 @@ function reportImage(imageId) {
     })
 
     // Simulate a delay to avoid overwhelming the API (adjust as needed)
-    setTimeout(() => { }, 1000); // 1 second delay
+    sleep(250)
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
 // Function to read the list of images from JSON (using require)
 function readImageList() {
     try {
@@ -27,11 +32,10 @@ function readImageList() {
 // Main script
 function main() {
     const imageList = readImageList();
-
+    console.log(imageList)
     for (const imageId of imageList) {
         reportImage(imageId);
     }
-
     console.log('Image reporting completed.');
 }
 

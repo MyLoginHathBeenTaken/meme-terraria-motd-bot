@@ -1,4 +1,4 @@
-const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=2&is_flagged=false';
+const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=1&is_flagged=false';
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
@@ -179,6 +179,11 @@ const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testIm
 
 const rest = new REST().setToken(token);
 
+function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
 // Command handler function
 async function handleCommandInteraction(interaction) {
     if (interaction.type === InteractionType.ApplicationCommand) {
@@ -194,10 +199,12 @@ async function handleCommandInteraction(interaction) {
                 break;
             case 'test':
                 console.log(interaction.channelId);
-                await interaction.reply('Testing...');
-                for (var i = 0; i < 100; 1++) {
+                await interaction.deferReply()
+                for (var i = 0; i < 1; i++) {
                     await testImage(interaction.channelId);
+                    await sleep(250)
                 }
+                await interaction.editReply('Done!');
                 break;
             default:
                 await interaction.reply('This command does not exist.');
