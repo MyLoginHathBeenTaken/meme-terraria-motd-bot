@@ -181,9 +181,9 @@ const rest = new REST().setToken(token);
 
 function sleep(ms) {
     return new Promise((resolve) => {
-      setTimeout(resolve, ms);
+        setTimeout(resolve, ms);
     });
-  }
+}
 // Command handler function
 async function handleCommandInteraction(interaction) {
     if (interaction.type === InteractionType.ApplicationCommand) {
@@ -242,9 +242,17 @@ client.on("guildJoin", async (guild) => {
 
 pushPull()
 client.login(token);
+sendDailyImage();
+reRegister();
+console.log('-----')
 
 // Daily execution using Node.js scheduling
-const job = schedule.scheduleJob('0 12 * * *', function () {
+const rule = new schedule.RecurrenceRule();
+rule.hour = 12;
+rule.minute = 0;
+rule.tz = 'America/New_York';
+
+const job = schedule.scheduleJob(rule, function () {
     sendDailyImage();
     reRegister();
     console.log('-----')
