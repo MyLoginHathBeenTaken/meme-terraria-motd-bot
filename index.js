@@ -242,9 +242,6 @@ client.on("guildJoin", async (guild) => {
 
 pushPull()
 client.login(token);
-sendDailyImage();
-reRegister();
-console.log('-----')
 
 // Daily execution using Node.js scheduling
 const rule = new schedule.RecurrenceRule();
