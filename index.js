@@ -4,8 +4,7 @@ const https = require('https');
 const os = require('os');
 const { token, appID, motdArray } = require('./config.json');
 const { SlashCommandBuilder, Client, InteractionType, REST, Routes, Events, PermissionFlagsBits, EmbedBuilder, GatewayIntentBits } = require('discord.js');
-const schedule = require('node-schedule');
-const { error } = require('console');
+const { Cron } = require("croner");
 const client = new Client({ intents: GatewayIntentBits.Guilds });
 const saveData = './yuri.json';
 var dataObj = {};
@@ -173,7 +172,13 @@ const unsubscribeCommand = new SlashCommandBuilder()
 const testImageCommand = new SlashCommandBuilder()
     .setName('test')
     .setDescription('Request a test image.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addIntegerOption(option =>
+        option
+            .setName('images')
+            .setDescription('Number of images'))
+
+    
 
 const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON()];
 
@@ -200,7 +205,9 @@ async function handleCommandInteraction(interaction) {
             case 'test':
                 console.log(interaction.channelId);
                 await interaction.deferReply()
-                for (var i = 0; i < 1; i++) {
+                let x = interaction.options.getInteger('images') ?? 1
+                if (x > 20) {x = 20};
+                for (var i = 0; i < x; i++) {
                     await testImage(interaction.channelId);
                     await sleep(250)
                 }
@@ -240,17 +247,14 @@ client.on("guildJoin", async (guild) => {
     reRegister()
 });
 
+let now = new Date(Date.now())
+console.log(now.toString())
 pushPull()
 client.login(token);
+console.log(job.isRunning());
 
-// Daily execution using Node.js scheduling
-const rule = new schedule.RecurrenceRule();
-rule.hour = 12;
-rule.minute = 0;
-rule.tz = 'America/New_York';
-
-const job = schedule.scheduleJob(rule, function () {
+const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
+    let now = new Date(Date.now())
+    console.log(now.toString())
     sendDailyImage();
-    reRegister();
-    console.log('-----')
-});
+} );
