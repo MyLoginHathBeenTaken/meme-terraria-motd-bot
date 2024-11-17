@@ -1,4 +1,4 @@
-const url = 'https://api.nekosapi.com/v3/images/random?tag=41&rating=safe&limit=1&is_flagged=false';
+const url = 'https://yuri.6969690.xyz/random';
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
@@ -92,8 +92,8 @@ async function testImage(cId) {
                     const dailyEmbed = new EmbedBuilder()
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
-                        .setImage(`${data.items[0].image_url}`)
-                        .setFooter({ text: `${data.items[0].id}` });
+                        .setImage(`${data.url}`)
+                        .setFooter({ text: `${data.image}` });
 
 
                     try {
@@ -136,8 +136,8 @@ async function sendDailyImage() {
                     const dailyEmbed = new EmbedBuilder()
                         .setColor(0x3ABB52)
                         .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
-                        .setImage(`${data.items[0].image_url}`)
-                        .setFooter({ text: `${data.items[0].id}` });
+                        .setImage(`${data.url}`)
+                        .setFooter({ text: `${data.image}` });
 
                     for (const channel of channels.values()) {
                         try {
@@ -257,5 +257,3 @@ const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
 pushPull()
 client.login(token);
 console.log(job.isRunning());
-
-
