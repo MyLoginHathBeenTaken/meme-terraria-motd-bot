@@ -249,12 +249,13 @@ client.on("guildJoin", async (guild) => {
 
 let now = new Date(Date.now())
 console.log(now.toString())
-pushPull()
-client.login(token);
-console.log(job.isRunning());
-
 const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
     let now = new Date(Date.now())
     console.log(now.toString())
     sendDailyImage();
 } );
+pushPull()
+client.login(token);
+console.log(job.isRunning());
+
+
