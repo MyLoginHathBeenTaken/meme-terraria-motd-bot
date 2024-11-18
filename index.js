@@ -95,10 +95,9 @@ async function testImage(cId) {
                         .setImage(`${data.url}`)
                         .setFooter({ text: `${data.image}` });
 
-
                     try {
                         channel.send({ embeds: [dailyEmbed] });
-                        console.log(`Test image ${data.items[0].id} sent to channel ${cId}`);
+                        console.log(`Test image ${data.image} sent to channel ${cId}`);
                     } catch (error) {
                         console.error(`Error sending image to channel ${cId}:`, error);
                     }
@@ -204,12 +203,12 @@ async function handleCommandInteraction(interaction) {
                 break;
             case 'test':
                 console.log(interaction.channelId);
-                await interaction.deferReply()
+                await interaction.reply('Sending')
                 let x = interaction.options.getInteger('images') ?? 1
                 if (x > 20) {x = 20};
                 for (var i = 0; i < x; i++) {
                     await testImage(interaction.channelId);
-                    await sleep(250)
+                    await sleep(1000)
                 }
                 await interaction.editReply('Done!');
                 break;
