@@ -199,9 +199,10 @@ async function yeet(cId) {
 
     if (targetMessage) {
         //delete message
+        let footer = targetMessage.embeds[0].footer.text
         await targetMessage.delete()
-            .then((msg) => {
-                console.log(`Deleted image ${msg.embeds.footer}`)
+            .then(() => {
+                console.log(`Deleted image ${footer}`)
                 //send replacement
                 https.get(url, (res) => {
                     let rawData = '';
@@ -238,7 +239,7 @@ async function yeet(cId) {
                     console.error(`Error during request: ${error}`);
                 });
             })
-            .catch(console.error(`Failed deleting at an image`))
+            .catch((err)=> {console.error(`Failed deleting at an image: ${err}`)})
     } else {
         console.log('No suitable message found to delete');
     }
@@ -305,6 +306,7 @@ async function handleCommandInteraction(interaction) {
                 await interaction.reply('Yeeting...');
                 await yeet(interaction.channelId);
                 await interaction.editReply('Yeeted!');
+                break;
             default:
                 await interaction.reply('This command does not exist.');
                 break;
