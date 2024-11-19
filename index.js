@@ -246,14 +246,13 @@ const testImageCommand = new SlashCommandBuilder()
     .addIntegerOption(option =>
         option
             .setName('images')
-            .setDescription('Number of images'))
-
+            .setDescription('Number of images'));
 const yeetCommand = new SlashCommandBuilder()
     .setName('yeet')
-    .setDescription('Yeet the bot and the last image it sent.')
+    .setDescription('Yeet the bot and the last image it sent.');
 
 
-const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON()];
+const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(). yeetCommand.toJSON()];
 
 const rest = new REST().setToken(token);
 
