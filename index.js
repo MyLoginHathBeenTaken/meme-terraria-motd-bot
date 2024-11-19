@@ -168,65 +168,81 @@ async function sendDailyImage() {
 //function to replace bad image
 async function yeet(cId) {
     const channel = client.channels.cache.get(cId);
-    //remove bad image and log image name
-    //find last sent in channel
+    
+    async function fetchOlderMessages(channel, lastMessageId) {
+        return await channel.messages.fetch({ 
+            limit: 100,
+            before: lastMessageId 
+        });
+    }
+
+    // Get the two most recent bot messages
     let lastId = null;
     let messages;
+    let foundMessages = [];
+
     do {
         messages = await fetchOlderMessages(channel, lastId);
-        const botMessage = messages.find(msg => msg.author.id === client.user.id);
-
-        if (botMessage) {
-            //delete message
-            await botMessage.delete()
-                .then((msg) => {
-                    console.log(`Deleted image ${msg.embeds.footer}`)
-                    //send replacement
-                    https.get(url, (res) => {
-                        let rawData = '';
-                        res.on('data', (chunk) => {
-                            rawData += chunk;
-                        });
-                        res.on('end', () => {
-                            try {
-                                // Parse the received data based on the Content-Type header (if applicable)
-                                const contentType = res.headers['content-type'];
-                                if (contentType && contentType.includes('json')) {
-                                    const data = JSON.parse(rawData);
-                                    const dailyEmbed = new EmbedBuilder()
-                                        .setColor(0x3ABB52)
-                                        .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
-                                        .setImage(`${data.url}`)
-                                        .setFooter({ text: `${data.image}` });
-
-                                    try {
-                                        channel.send({ embeds: [dailyEmbed] });
-                                        console.log(`Replacement image sent to channel ${cId}`);
-                                    } catch (error) {
-                                        console.error(`Error sending image to channel ${cId}:`, error);
-                                    }
-                                    return 'done'
-                                } else {
-                                    console.log(`data not json${os.EOL}${rawData}`);
-                                }
-                            } catch (error) {
-                                console.error('Error parsing data:', error);
-                            }
-                        });
-                    }).on('error', (error) => {
-                        console.error(`Error during request: ${error}`);
-                    });
-                })
-                .catch(console.error(`Failed deleting at an image`))
+        const botMessages = messages.filter(msg => msg.author.id === client.user.id);
+        
+        foundMessages.push(...botMessages.values());
+        if (foundMessages.length >= 2) {
+            // We found the two most recent bot messages
             break;
         }
-
+        
         lastId = messages.last()?.id;
-    } while (messages.size === 100); // Keep going if we got a full page
+    } while (messages.size === 100);
 
+    // The second-to-last message is what we want
+    const targetMessage = foundMessages[1];
 
+    if (targetMessage) {
+        //delete message
+        await targetMessage.delete()
+            .then((msg) => {
+                console.log(`Deleted image ${msg.embeds.footer}`)
+                //send replacement
+                https.get(url, (res) => {
+                    let rawData = '';
+                    res.on('data', (chunk) => {
+                        rawData += chunk;
+                    });
+                    res.on('end', () => {
+                        try {
+                            // Parse the received data based on the Content-Type header (if applicable)
+                            const contentType = res.headers['content-type'];
+                            if (contentType && contentType.includes('json')) {
+                                const data = JSON.parse(rawData);
+                                const dailyEmbed = new EmbedBuilder()
+                                    .setColor(0x3ABB52)
+                                    .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
+                                    .setImage(`${data.url}`)
+                                    .setFooter({ text: `${data.image}` });
+
+                                try {
+                                    channel.send({ embeds: [dailyEmbed] });
+                                    console.log(`Replacement image sent to channel ${cId}`);
+                                } catch (error) {
+                                    console.error(`Error sending image to channel ${cId}:`, error);
+                                }
+                                return 'done'
+                            } else {
+                                console.log(`data not json${os.EOL}${rawData}`);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing data:', error);
+                        }
+                    });
+                }).on('error', (error) => {
+                    console.error(`Error during request: ${error}`);
+                });
+            })
+            .catch(console.error(`Failed deleting at an image`))
+    } else {
+        console.log('No suitable message found to delete');
+    }
 }
-
 
 const subscribeCommand = new SlashCommandBuilder()
     .setName('subscribe')
