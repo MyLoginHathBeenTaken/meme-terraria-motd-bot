@@ -12,13 +12,10 @@ var dataObj = {};
 // Function to read JSON data from a file
 function jsonRead(file) {
     try {
-        // Read file content synchronously (consider asynchronous approach for large files)
         const data = fs.readFileSync(file, "utf8");
-        // Parse JSON data
         return JSON.parse(data);
     } catch (error) {
         console.error("Error reading file:", error);
-        // Handle error appropriately, like returning an empty object or throwing a custom error
         return {};
     }
 }
@@ -27,12 +24,10 @@ function jsonRead(file) {
 function jsonWrite(file, obj) {
     try {
         // Stringify the object
-        const data = JSON.stringify(obj, null, 4); // Add indentation for readability (optional)
-        // Write data to the file synchronously (consider asynchronous approach for large files)
+        const data = JSON.stringify(obj, null, 4);
         fs.writeFileSync(file, data);
     } catch (error) {
         console.error("Error writing file:", error);
-        // Handle error appropriately, like throwing a custom error
     }
 }
 
@@ -266,7 +261,7 @@ const testImageCommand = new SlashCommandBuilder()
 
 const yeetCommand = new SlashCommandBuilder()
     .setName('yeet')
-    .setDescription('Yeet the bot and the last image it sent.');
+    .setDescription('Yeet the bot and the last message it sent.');
 
 
 const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON()];
