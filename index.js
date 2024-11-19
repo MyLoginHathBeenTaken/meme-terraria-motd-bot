@@ -177,11 +177,10 @@ async function yeet(cId) {
         const botMessage = messages.find(msg => msg.author.id === client.user.id);
 
         if (botMessage) {
-            // Found what we're looking for
             //delete message
             await botMessage.delete()
                 .then((msg) => {
-                    console.log(`Deleted immage ${msg.embeds.footer}`)
+                    console.log(`Deleted image ${msg.embeds.footer}`)
                     //send replacement
                     https.get(url, (res) => {
                         let rawData = '';
@@ -218,7 +217,7 @@ async function yeet(cId) {
                         console.error(`Error during request: ${error}`);
                     });
                 })
-                .catch(console.error(err))
+                .catch(console.error(`Failed deleting at an image`))
             break;
         }
 
@@ -286,7 +285,7 @@ async function handleCommandInteraction(interaction) {
                 await interaction.editReply('Done!');
                 break;
             case 'yeet':
-                console.log(`yeeting and image from channel ${interaction.channelId}`);
+                console.log(`yeeting an image from channel ${interaction.channelId}`);
                 await interaction.reply('Yeeting...');
                 await yeet(interaction.channelId);
                 await interaction.editReply('Yeeted!');
@@ -297,23 +296,19 @@ async function handleCommandInteraction(interaction) {
     }
 }
 
-function reRegister() {
-    let unReg = client.guilds.cache.filter((guilds) => !dataObj.registered.includes(guilds.id));
+function reRegister(force = false) {
+    let unReg = (force) ? client.guilds.cache : client.guilds.cache.filter((guilds) => !dataObj.registered.includes(guilds.id));
     for (const guild of unReg.values()) {
         try {
             rest.put(Routes.applicationGuildCommands(appID, guild.id), { body: commands });
             console.log(`Registering application commands on server: ${guild.id}.`)
-            dataObj.registered.push(guild.id)
+            if (!dataObj.registered.includes(guild.id)) {dataObj.registered.push(guild.id)}
             pushPull()
         } catch (error) {
             console.error(`Error registering application commands:`, error);
         }
     }
 }
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-    reRegister()
-});
 
 client.on(Events.InteractionCreate, async interaction => {
     handleCommandInteraction(interaction)
@@ -332,5 +327,9 @@ const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
     sendDailyImage();
 });
 pushPull()
-client.login(token);
-console.log(job.isRunning());
+client.login(token)
+client.once(Events.ClientReady, readyClient => {
+	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+    reRegister(true)
+    console.log(job.isRunning())
+});
