@@ -198,6 +198,8 @@ async function yeet(cId) {
         await targetMessage.delete()
             .then(() => {
                 console.log(`Deleted image ${footer}`)
+                dataObj.nuke.push(footer)
+                pushPull()
                 //send replacement
                 https.get(url, (res) => {
                     let rawData = '';
