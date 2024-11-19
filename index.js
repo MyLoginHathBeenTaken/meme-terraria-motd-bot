@@ -336,7 +336,7 @@ client.on("guildJoin", async (guild) => {
 
 let now = new Date(Date.now())
 console.log(now.toString())
-const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
+const job = new Cron("0 12 * * *", { utcOffset: -300, protect: true }, () => {
     let now = new Date(Date.now())
     console.log(now.toString())
     sendDailyImage();
