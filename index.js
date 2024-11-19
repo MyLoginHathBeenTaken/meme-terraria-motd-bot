@@ -51,6 +51,13 @@ function pushPull() {
     }
 }
 
+async function fetchOlderMessages(channel, lastMessageId) {
+    return await channel.messages.fetch({
+        limit: 100,
+        before: lastMessageId
+    });
+}
+
 // Function to subscribe a channel
 function subscribeChannel(channel) {
     if (!dataObj.subs.includes(channel)) {
@@ -158,6 +165,70 @@ async function sendDailyImage() {
     });
 }
 
+//function to replace bad image
+async function yeet(cId) {
+    const channel = client.channels.cache.get(cId);
+    //remove bad image and log image name
+    //find last sent in channel
+    let lastId = null;
+    let messages;
+    do {
+        messages = await fetchOlderMessages(channel, lastId);
+        const botMessage = messages.find(msg => msg.author.id === client.user.id);
+
+        if (botMessage) {
+            // Found what we're looking for
+            //delete message
+            await botMessage.delete()
+                .then((msg) => {
+                    console.log(`Deleted immage ${msg.embeds.footer}`)
+                    //send replacement
+                    https.get(url, (res) => {
+                        let rawData = '';
+                        res.on('data', (chunk) => {
+                            rawData += chunk;
+                        });
+                        res.on('end', () => {
+                            try {
+                                // Parse the received data based on the Content-Type header (if applicable)
+                                const contentType = res.headers['content-type'];
+                                if (contentType && contentType.includes('json')) {
+                                    const data = JSON.parse(rawData);
+                                    const dailyEmbed = new EmbedBuilder()
+                                        .setColor(0x3ABB52)
+                                        .setTitle(`${motdArray[Math.floor(Math.random() * motdArray.length)]}`)
+                                        .setImage(`${data.url}`)
+                                        .setFooter({ text: `${data.image}` });
+
+                                    try {
+                                        channel.send({ embeds: [dailyEmbed] });
+                                        console.log(`Replacement image sent to channel ${cId}`);
+                                    } catch (error) {
+                                        console.error(`Error sending image to channel ${cId}:`, error);
+                                    }
+                                    return 'done'
+                                } else {
+                                    console.log(`data not json${os.EOL}${rawData}`);
+                                }
+                            } catch (error) {
+                                console.error('Error parsing data:', error);
+                            }
+                        });
+                    }).on('error', (error) => {
+                        console.error(`Error during request: ${error}`);
+                    });
+                })
+                .catch(console.error(err))
+            break;
+        }
+
+        lastId = messages.last()?.id;
+    } while (messages.size === 100); // Keep going if we got a full page
+
+
+}
+
+
 const subscribeCommand = new SlashCommandBuilder()
     .setName('subscribe')
     .setDescription('Subscribe this channel to receive daily images.')
@@ -177,7 +248,10 @@ const testImageCommand = new SlashCommandBuilder()
             .setName('images')
             .setDescription('Number of images'))
 
-    
+const yeetCommand = new SlashCommandBuilder()
+    .setName('yeet')
+    .setDescription('Yeet the bot and the last image it sent.')
+
 
 const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON()];
 
@@ -205,13 +279,18 @@ async function handleCommandInteraction(interaction) {
                 console.log(interaction.channelId);
                 await interaction.reply('Sending')
                 let x = interaction.options.getInteger('images') ?? 1
-                if (x > 20) {x = 20};
+                if (x > 20) { x = 20 };
                 for (var i = 0; i < x; i++) {
                     await testImage(interaction.channelId);
                     await sleep(1000)
                 }
                 await interaction.editReply('Done!');
                 break;
+            case 'yeet':
+                console.log(`yeeting and image from channel ${interaction.channelId}`);
+                await interaction.reply('Yeeting...');
+                await yeet(interaction.channelId);
+                await interaction.editReply('Yeeted!');
             default:
                 await interaction.reply('This command does not exist.');
                 break;
@@ -252,7 +331,7 @@ const job = new Cron("0 12 * * *", { utcOffset: -240, protect: true }, () => {
     let now = new Date(Date.now())
     console.log(now.toString())
     sendDailyImage();
-} );
+});
 pushPull()
 client.login(token);
 console.log(job.isRunning());
