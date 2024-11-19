@@ -194,11 +194,11 @@ async function yeet(cId) {
 
     if (targetMessage) {
         //delete message
-        let footer = targetMessage.embeds[0].footer.text
+        let footer = targetMessage.embeds[0]?.footer.text ?? 'No Footer';
         await targetMessage.delete()
             .then(() => {
                 console.log(`Deleted image ${footer}`)
-                dataObj.nuke.push(footer)
+                if (footer != 'No Footer') {dataObj.nuke.push(`${footer}`)}
                 pushPull()
                 //send replacement
                 https.get(url, (res) => {
