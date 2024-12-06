@@ -273,8 +273,8 @@ const yeetCommand = new SlashCommandBuilder()
     .setDescription('Yeet the bot and the last message it sent.');
 
 const totpImageCommand = new SlashCommandBuilder()
-    .setName('test')
-    .setDescription('Request a test image.')
+    .setName('totp')
+    .setDescription('Request an image via totp.')
     .setDefaultMemberPermissions()
     .addIntegerOption(option =>
         option
