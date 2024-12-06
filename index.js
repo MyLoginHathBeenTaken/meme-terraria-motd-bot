@@ -272,8 +272,17 @@ const yeetCommand = new SlashCommandBuilder()
     .setName('yeet')
     .setDescription('Yeet the bot and the last message it sent.');
 
+const totpImageCommand = new SlashCommandBuilder()
+    .setName('test')
+    .setDescription('Request a test image.')
+    .setDefaultMemberPermissions()
+    .addIntegerOption(option =>
+        option
+            .setName('totp')
+            .setDescription('Number of images'))
+            .setRequired(true);
 
-const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON()];
+const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON()];
 const rest = new REST().setToken(token);
 
 function sleep(ms) {
