@@ -323,7 +323,7 @@ async function handleCommandInteraction(interaction) {
             case 'totp':;
                 await interaction.reply({content: 'Validating TOTP...', ephemeral: true});
                 let tokenValidates = speakeasy.totp.verify({
-                    secret: secret.base32,
+                    secret: totp,
                     encoding: 'base32',
                     token: interaction.options.getInteger('totp'),
                     window: 3
