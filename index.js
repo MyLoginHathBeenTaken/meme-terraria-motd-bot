@@ -2,8 +2,9 @@ const url = 'https://yuri.6969690.xyz/random';
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
-const { token, appID, motdArray } = require('./config.json');
+const { token, appID, motdArray, totp } = require('./config.json');
 const { SlashCommandBuilder, Client, InteractionType, REST, Routes, Events, PermissionFlagsBits, EmbedBuilder, GatewayIntentBits } = require('discord.js');
+var speakeasy = require("speakeasy");
 const { Cron } = require("croner");
 const client = new Client({ intents: GatewayIntentBits.Guilds });
 const saveData = './yuri.json';
@@ -77,7 +78,7 @@ function unsubscribeChannel(channel) {
 }
 
 // Function to send the daily image
-async function testImage(cId) {
+async function sendImage(cId, reason) {
     const channel = client.channels.cache.get(cId);
     https.get(url, (res) => {
 
@@ -99,7 +100,14 @@ async function testImage(cId) {
 
                     try {
                         channel.send({ embeds: [dailyEmbed] });
-                        console.log(`Test image ${data.image} sent to channel ${cId}`);
+                        switch (reason) {
+                            case 'test': 
+                                console.log(`Test image ${data.image} sent to channel ${cId}`);
+                                break;
+                            case 'topt': 
+                                console.log(`Requested image ${data.image} sent to channel ${cId}verified by totp`);
+                                break;
+                        }
                     } catch (error) {
                         console.error(`Error sending image to channel ${cId}:`, error);
                     }
@@ -115,7 +123,6 @@ async function testImage(cId) {
         console.error(`Error during request: ${error}`);
     });
 }
-
 
 // Function to send the daily image
 async function sendDailyImage() {
@@ -293,7 +300,7 @@ async function handleCommandInteraction(interaction) {
                 let x = interaction.options.getInteger('images') ?? 1
                 if (x > 20) { x = 20 };
                 for (var i = 0; i < x; i++) {
-                    await testImage(interaction.channelId);
+                    await sendImage(interaction.channelId, 'test');
                     await sleep(1000)
                 }
                 await interaction.editReply('Done!');
@@ -303,6 +310,21 @@ async function handleCommandInteraction(interaction) {
                 await interaction.reply('Yeeting...');
                 await yeet(interaction.channelId);
                 await interaction.editReply('Yeeted!');
+                break;
+            case 'totp':;
+                await interaction.reply({content: 'Validating TOTP...', ephemeral: true});
+                let tokenValidates = speakeasy.totp.verify({
+                    secret: secret.base32,
+                    encoding: 'base32',
+                    token: interaction.options.getInteger('totp'),
+                    window: 3
+                });
+                if (tokenValidates) {
+                    await interaction.editReply('TOTP is valid!');
+                    await sendImage(interaction.channelId, 'totp');
+                } else {
+                    await interaction.editReply('TOTP is invalid!');
+                }
                 break;
             default:
                 await interaction.reply('This command does not exist.');
