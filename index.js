@@ -301,7 +301,7 @@ const linkCommand = new SlashCommandBuilder()
             .setRequired(false)
     );
 
-const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON(), linkCommand.toJSON()];
+const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON()];
 const rest = new REST().setToken(token);
 
 function sleep(ms) {
