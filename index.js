@@ -101,10 +101,10 @@ async function sendImage(cId, reason) {
                     try {
                         channel.send({ embeds: [dailyEmbed] });
                         switch (reason) {
-                            case 'test': 
+                            case 'test':
                                 console.log(`Test image ${data.image} sent to channel ${cId}`);
                                 break;
-                            case 'topt': 
+                            case 'topt':
                                 console.log(`Requested image ${data.image} sent to channel ${cId}verified by totp`);
                                 break;
                         }
@@ -170,11 +170,11 @@ async function sendDailyImage() {
 //function to replace bad image
 async function yeet(cId) {
     const channel = client.channels.cache.get(cId);
-    
+
     async function fetchOlderMessages(channel, lastMessageId) {
-        return await channel.messages.fetch({ 
+        return await channel.messages.fetch({
             limit: 100,
-            before: lastMessageId 
+            before: lastMessageId
         });
     }
 
@@ -186,13 +186,13 @@ async function yeet(cId) {
     do {
         messages = await fetchOlderMessages(channel, lastId);
         const botMessages = messages.filter(msg => msg.author.id === client.user.id);
-        
+
         foundMessages.push(...botMessages.values());
         if (foundMessages.length >= 2) {
             // We found the two most recent bot messages
             break;
         }
-        
+
         lastId = messages.last()?.id;
     } while (messages.size === 100);
 
@@ -205,7 +205,7 @@ async function yeet(cId) {
         await targetMessage.delete()
             .then(() => {
                 console.log(`Deleted image ${footer}`)
-                if (footer != 'No Footer') {dataObj.nuke.push(`${footer}`)}
+                if (footer != 'No Footer') { dataObj.nuke.push(`${footer}`) }
                 pushPull()
                 //send replacement
                 https.get(url, (res) => {
@@ -243,7 +243,7 @@ async function yeet(cId) {
                     console.error(`Error during request: ${error}`);
                 });
             })
-            .catch((err)=> {console.error(`Failed deleting at an image: ${err}`)})
+            .catch((err) => { console.error(`Failed deleting at an image: ${err}`) })
     } else {
         console.log('No suitable message found to delete');
     }
@@ -266,7 +266,8 @@ const testImageCommand = new SlashCommandBuilder()
     .addIntegerOption(option =>
         option
             .setName('images')
-            .setDescription('Number of images'));
+            .setDescription('Number of images')
+    );
 
 const yeetCommand = new SlashCommandBuilder()
     .setName('yeet')
@@ -280,9 +281,27 @@ const totpImageCommand = new SlashCommandBuilder()
         option
             .setName('totp')
             .setDescription('Number of images')
-            .setRequired(true));
+            .setRequired(true)
+    );
 
-const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON()];
+const linkCommand = new SlashCommandBuilder()
+    .setName('totp')
+    .setDescription('Request an image via totp.')
+    .setDefaultMemberPermissions()
+    .addStringOption(option =>
+        option
+            .setName('name')
+            .setDescription('Name')
+            .setRequired(true)
+    )
+    .addStringOption(option =>
+        option
+            .setName('type')
+            .setDescription('Media Type')
+            .setRequired(false)
+    );
+
+const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON(), linkCommand.toJSON()];
 const rest = new REST().setToken(token);
 
 function sleep(ms) {
@@ -320,8 +339,8 @@ async function handleCommandInteraction(interaction) {
                 await yeet(interaction.channelId);
                 await interaction.editReply('Yeeted!');
                 break;
-            case 'totp':;
-                await interaction.reply({content: 'Validating TOTP...', ephemeral: true});
+            case 'totp':
+                await interaction.reply({ content: 'Validating TOTP...', ephemeral: true });
                 let tokenValidates = speakeasy.totp.verify({
                     secret: totp,
                     encoding: 'base32',
@@ -329,11 +348,16 @@ async function handleCommandInteraction(interaction) {
                     window: 3
                 });
                 if (tokenValidates) {
-                    await interaction.editReply('TOTP is valid!');
                     await sendImage(interaction.channelId, 'totp');
+                    await interaction.deleteReply();
                 } else {
                     await interaction.editReply('TOTP is invalid!');
                 }
+                break;
+            case 'link':
+                await interaction.reply({ content: 'Looking up...', ephemeral: true });
+                await link(interaction.channelId, interaction.options.getString('name'), interaction.options.getString('type'));
+                await interaction.deleteReply();
                 break;
             default:
                 await interaction.reply('This command does not exist.');
@@ -348,7 +372,7 @@ function reRegister(force = false) {
         try {
             rest.put(Routes.applicationGuildCommands(appID, guild.id), { body: commands });
             console.log(`Registering application commands on server: ${guild.id}.`)
-            if (!dataObj.registered.includes(guild.id)) {dataObj.registered.push(guild.id)}
+            if (!dataObj.registered.includes(guild.id)) { dataObj.registered.push(guild.id) }
             pushPull()
         } catch (error) {
             console.error(`Error registering application commands:`, error);
@@ -375,7 +399,7 @@ const job = new Cron("0 12 * * *", { utcOffset: -300, protect: true }, () => {
 pushPull()
 client.login(token)
 client.once(Events.ClientReady, readyClient => {
-	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+    console.log(`Ready! Logged in as ${readyClient.user.tag}`);
     reRegister(true)
     console.log(job.isRunning())
 });
