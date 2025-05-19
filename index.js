@@ -8,7 +8,23 @@ var speakeasy = require("speakeasy");
 const { Cron } = require("croner");
 const client = new Client({ intents: GatewayIntentBits.Guilds });
 const saveData = './yuri.json';
+const linkedList = './links.json';
+var linkList = [];
 var dataObj = {};
+
+//LinkedListService
+const express = require('express');
+const app = express();
+const port = 10420;
+
+app.get(/\/\d+$/, (req, res) => {
+    linkNumber = parseInt(req.path.substring(1))
+    res.redirect(`${linkList[linkNumber]}`)
+});
+
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+});
 
 // Function to read JSON data from a file
 function jsonRead(file) {
@@ -32,7 +48,22 @@ function jsonWrite(file, obj) {
     }
 }
 
-function pushPull() {
+function pushPullLinkedList() {
+    let readObj = jsonRead(linkedList);
+    if (!(Object.keys(linkList).length === 0) && (linkList.constructor === Array)) {
+        // array not empty
+        jsonWrite(linkedList, linkList);
+        linkList = jsonRead(linkedList);
+    } else if (!(Object.keys(readObj).length === 0) && (readObj.constructor === Array)) {
+        // array empty, file not empty
+        linkList = readObj
+    } else {
+        console.error(`No data or read error at: ${linkedList}`)
+        return {}
+    }
+}
+
+function pushPullYuriJson() {
     let readObj = jsonRead(saveData);
     if (!(Object.keys(dataObj).length === 0) && (dataObj.constructor === Object)) {
         // obj not empty
@@ -47,18 +78,11 @@ function pushPull() {
     }
 }
 
-async function fetchOlderMessages(channel, lastMessageId) {
-    return await channel.messages.fetch({
-        limit: 100,
-        before: lastMessageId
-    });
-}
-
 // Function to subscribe a channel
 function subscribeChannel(channel) {
     if (!dataObj.subs.includes(channel)) {
         dataObj.subs.push(channel);
-        pushPull()
+        pushPullYuriJson()
         console.log(`Channel ${channel} subscribed to daily image posts.`);
     } else {
         console.log(`Channel ${channel} already subscribed.`);
@@ -70,7 +94,7 @@ function unsubscribeChannel(channel) {
     const index = dataObj.subs.indexOf(channel);
     if (index > -1) {
         dataObj.subs.splice(index, 1);
-        pushPull()
+        pushPullYuriJson()
         console.log(`Channel ${channel} unsubscribed from daily image posts.`);
     } else {
         console.log(`Channel ${channel} not subscribed.`);
@@ -126,7 +150,7 @@ async function sendImage(cId, reason) {
 
 // Function to send the daily image
 async function sendDailyImage() {
-    pushPull()
+    pushPullYuriJson()
     const channels = client.channels.cache.filter(channel => dataObj.subs.includes(channel.id));
     https.get(url, (res) => {
 
@@ -206,7 +230,7 @@ async function yeet(cId) {
             .then(() => {
                 console.log(`Deleted image ${footer}`)
                 if (footer != 'No Footer') { dataObj.nuke.push(`${footer}`) }
-                pushPull()
+                pushPullYuriJson()
                 //send replacement
                 https.get(url, (res) => {
                     let rawData = '';
@@ -249,6 +273,12 @@ async function yeet(cId) {
     }
 }
 
+async function addLink(url) {
+    linkList.push(url)
+    pushPullLinkedList()
+    return `link.6969690.xyz/${linkList.length - 1}`
+}
+
 const subscribeCommand = new SlashCommandBuilder()
     .setName('subscribe')
     .setDescription('Subscribe this channel to receive daily images.')
@@ -285,23 +315,17 @@ const totpImageCommand = new SlashCommandBuilder()
     );
 
 const linkCommand = new SlashCommandBuilder()
-    .setName('totp')
-    .setDescription('Request an image via totp.')
+    .setName('numbers')
+    .setDescription('Link shortening')
     .setDefaultMemberPermissions()
     .addStringOption(option =>
         option
-            .setName('name')
-            .setDescription('Name')
+            .setName('url')
+            .setDescription('URL')
             .setRequired(true)
-    )
-    .addStringOption(option =>
-        option
-            .setName('type')
-            .setDescription('Media Type')
-            .setRequired(false)
     );
 
-const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON()];
+const commands = [subscribeCommand.toJSON(), unsubscribeCommand.toJSON(), testImageCommand.toJSON(), yeetCommand.toJSON(), totpImageCommand.toJSON(), linkCommand.toJSON()];
 const rest = new REST().setToken(token);
 
 function sleep(ms) {
@@ -340,7 +364,7 @@ async function handleCommandInteraction(interaction) {
                 await interaction.editReply('Yeeted!');
                 break;
             case 'totp':
-                await interaction.reply({ content: 'Validating TOTP...', ephemeral: true });
+                await interaction.reply({ content: 'Validating TOTP...', flags: 64 });
                 let tokenValidates = speakeasy.totp.verify({
                     secret: totp,
                     encoding: 'base32',
@@ -354,10 +378,16 @@ async function handleCommandInteraction(interaction) {
                     await interaction.editReply('TOTP is invalid!');
                 }
                 break;
-            case 'link':
-                await interaction.reply({ content: 'Looking up...', ephemeral: true });
-                await link(interaction.channelId, interaction.options.getString('name'), interaction.options.getString('type'));
-                await interaction.deleteReply();
+            case 'numbers':
+                await interaction.reply({ content: 'Adding Link...', flags: 64 });
+                let url = interaction.options.getString('url')
+                let link = await addLink(url)
+                if (link) {
+                    const channel = client.channels.cache.get(interaction.channelId);
+                    channel.send(`New Link Registerd : ${link}`)
+                } else {
+                    await interaction.editReply('Ohh no something went wrong go yell at Login');
+                }
                 break;
             default:
                 await interaction.reply('This command does not exist.');
@@ -373,7 +403,7 @@ function reRegister(force = false) {
             rest.put(Routes.applicationGuildCommands(appID, guild.id), { body: commands });
             console.log(`Registering application commands on server: ${guild.id}.`)
             if (!dataObj.registered.includes(guild.id)) { dataObj.registered.push(guild.id) }
-            pushPull()
+            pushPullYuriJson()
         } catch (error) {
             console.error(`Error registering application commands:`, error);
         }
@@ -396,7 +426,8 @@ const job = new Cron("0 12 * * *", { utcOffset: -300, protect: true }, () => {
     console.log(now.toString())
     sendDailyImage();
 });
-pushPull()
+pushPullYuriJson()
+pushPullLinkedList()
 client.login(token)
 client.once(Events.ClientReady, readyClient => {
     console.log(`Ready! Logged in as ${readyClient.user.tag}`);
