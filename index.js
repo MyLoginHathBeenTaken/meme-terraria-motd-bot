@@ -26,7 +26,7 @@ app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
 
-// Function to read JSON data from a file
+// Read JSON data from a file
 function jsonRead(file) {
     try {
         const data = fs.readFileSync(file, "utf8");
@@ -37,7 +37,7 @@ function jsonRead(file) {
     }
 }
 
-// Function to write JSON data to a file
+// Write JSON data to a file
 function jsonWrite(file, obj) {
     try {
         // Stringify the object
@@ -48,6 +48,7 @@ function jsonWrite(file, obj) {
     }
 }
 
+// Update Link shortening
 function pushPullLinkedList() {
     let readObj = jsonRead(linkedList);
     if (!(Object.keys(linkList).length === 0) && (linkList.constructor === Array)) {
@@ -78,7 +79,7 @@ function pushPullYuriJson() {
     }
 }
 
-// Function to subscribe a channel
+// Subscribe a channel
 function subscribeChannel(channel) {
     if (!dataObj.subs.includes(channel)) {
         dataObj.subs.push(channel);
@@ -89,7 +90,7 @@ function subscribeChannel(channel) {
     }
 }
 
-// Function to unsubscribe a channel
+// Unsubscribe a channel
 function unsubscribeChannel(channel) {
     const index = dataObj.subs.indexOf(channel);
     if (index > -1) {
@@ -101,7 +102,7 @@ function unsubscribeChannel(channel) {
     }
 }
 
-// Function to send the daily image
+// Send the daily image
 async function sendImage(cId, reason) {
     const channel = client.channels.cache.get(cId);
     https.get(url, (res) => {
@@ -148,7 +149,7 @@ async function sendImage(cId, reason) {
     });
 }
 
-// Function to send the daily image
+// Send the daily image
 async function sendDailyImage() {
     pushPullYuriJson()
     const channels = client.channels.cache.filter(channel => dataObj.subs.includes(channel.id));
@@ -191,7 +192,7 @@ async function sendDailyImage() {
     });
 }
 
-//function to replace bad image
+// Replace bad image
 async function yeet(cId) {
     const channel = client.channels.cache.get(cId);
 
