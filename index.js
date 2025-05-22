@@ -384,8 +384,7 @@ async function handleCommandInteraction(interaction) {
                 let url = interaction.options.getString('url')
                 let link = await addLink(url)
                 if (link) {
-                    const channel = client.channels.cache.get(interaction.channelId);
-                    channel.send(`New Link Registerd : ${link}`)
+                    interaction.editReply(`New Link Registerd : ${link}`)
                 } else {
                     await interaction.editReply('Ohh no something went wrong go yell at Login');
                 }
